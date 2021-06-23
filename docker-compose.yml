@@ -1,0 +1,84 @@
+version: "3.7"
+services:
+
+    sales-api:
+        image: rafaellessa/sales-api:${DOCKER_IMAGE_TAG:-latest}
+        working_dir: /var/www/html
+        container_name: sales-api
+        networks:
+            - service-network
+        ports:
+            - ${SALES_API_PORT:-8003}:80
+        depends_on:
+            - "service-mysql"           
+        environment:
+            # Apache
+            APACHE_DOCUMENT_ROOT: /var/www/html/public
+            APP_ENV: ${APP_ENV}
+
+            # XDebug
+            XDEBUG_CONFIG: remote_host=host.docker.internal remote_autostart=1 remote_handler=dbgp
+
+            BROADCAST_DRIVER: redis
+            CACHE_DRIVER: redis
+            QUEUE_CONNECTION: redis
+            SESSION_DRIVER: redis
+            SESSION_LIFETIME: 120
+            REDIS_CLIENT: predis
+
+            DB_CONNECTION: mysql
+
+            #Mysql
+            DB_HOST: service-mysql
+            DB_PORT: 3306
+            DB_USERNAME: ${MYSQL_DB_USERNAME}
+            DB_PASSWORD: ${MYSQL_DB_PASSWORD}
+            DB_DATABASE: ${MYSQL_DB_DATABASE}
+
+            #Laravel
+            APP_NAME: Laravel
+            APP_KEY: base64:FSFkzmeTptL+cjwjV/FF+UuDRZOBCXVbZjrTncrVqSI:=
+            APP_URL: http://localhost
+            APP_DEBUG: ${APP_DEBUG}
+
+            JWT_SECRET: ${JWT_SECRET}
+
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "2"
+                max-size: "10m"
+
+        restart: always
+
+    service-mysql:
+        image: mysql:5.7
+        ports:
+            - "3306:3306"
+        networks:
+            - service-network
+        container_name: service-mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_DB_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DB_DATABASE}
+
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "2"
+                max-size: "10m"
+
+        restart: always
+
+volumes:
+    # Mongo DB
+    mongodb:
+        driver: local
+
+    # Rabbit MQ Storage
+    rabbitmq:
+        driver: local
+
+networks:
+    service-network:
+        external: true

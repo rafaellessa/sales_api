@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+
+    sales-api:
+        build:
+            context: sales-api
+            dockerfile: buildimg.Dockerfile
+        volumes:
+            - ./sales-api/code:/var/www/html
