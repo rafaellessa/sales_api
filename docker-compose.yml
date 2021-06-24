@@ -11,6 +11,7 @@ services:
             - ${SALES_API_PORT:-8003}:80
         depends_on:
             - "service-mysql"           
+            - "service-redis"           
         environment:
             # Apache
             APACHE_DOCUMENT_ROOT: /var/www/html/public
@@ -34,6 +35,15 @@ services:
             DB_USERNAME: ${MYSQL_DB_USERNAME}
             DB_PASSWORD: ${MYSQL_DB_PASSWORD}
             DB_DATABASE: ${MYSQL_DB_DATABASE}
+
+            # Redis
+            REDIS_HOST: service-redis
+            REDIS_PORT: 6379
+            REDIS_CACHE_DB: 0
+            REDIS_DB: 0
+            REDIS_PREFIX: "CacheSales:"
+            CACHE_PREFIX: "SALES:"
+            REDIS_QUEUE: queue_sales
 
             #Laravel
             APP_NAME: Laravel
@@ -61,6 +71,20 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_DB_PASSWORD}
             MYSQL_DATABASE: ${MYSQL_DB_DATABASE}
+
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "2"
+                max-size: "10m"
+
+        restart: always
+
+    service-redis:
+        image: redis
+        container_name: service-redis
+        networks:
+            - service-network
 
         logging:
             driver: "json-file"
